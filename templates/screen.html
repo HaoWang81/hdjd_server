@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>大屏数据</title>
+
+    <link href="../static/styles/common.css" rel="stylesheet">
+    <link href="../static/styles/bootstrap.min.css" rel="stylesheet">
+    <link href="../static/styles/bootstrap-table.css" rel="stylesheet">
+    <link href="../static/styles/pagination.css" rel="stylesheet">
+    <script src="../static/scripts/Plugin/jquery-3.3.1.min.js"></script>
+    <script src="../static/scripts/Plugin/echarts.min.js"></script>
+    <script src="../static/scripts/Plugin/jquery.pagination.min.js"></script>
+    <script src="../static/scripts/common.js"></script>
+    <script src="../static/scripts/chronic.js"></script>
+</head>
+<style>
+    .red {
+        color: red;
+    }
+
+    tbody > tr {
+        line-height: 5vh;
+    }
+
+    thead > tr {
+        line-height: 6vh;
+    }
+
+    td {
+        font-size: 26px;
+    }
+
+    th {
+        font-size: 28px !important;
+    }
+</style>
+
+
+<body>
+<!--顶部-->
+<header class="header left">
+    <div class="left nav" style="width:30%">
+        <ul>
+            <!-- <li><i class="nav_1"></i><a href="index.html">采集概况</a> </li>
+            <li><i class="nav_2"></i><a href="quota.html">指标分析</a> </li>
+            <li><i class="nav_3"></i><a href="trend.html">趋势分析</a> </li>
+            <li class="nav_active"><i class="nav_4"></i><a href="chronic.html">慢病病人列表</a> </li> -->
+        </ul>
+    </div>
+    <div class="header_center left" style="position:relative;width:40%">
+        <h2><strong style="font-size: 3.5rem">南高齿产品监控数据</strong></h2>
+
+    </div>
+    <div class="right nav text_right">
+        <ul>
+
+        </ul>
+    </div>
+
+</header>
+<!--内容部分-->
+<div class="con left" style="width: 98%;margin-left: 1%;margin-bottom: 25px;">
+    <div class="div_any_child" style="margin-top: 50px">
+        <div class="table_p" style="height: 96%;margin-top: 20px;overflow: hidden;">
+            <table id="scrollingTable" style="height: unset">
+                <thead>
+                <tr>
+                    <th>厂号</th>
+                    <th>造型</th>
+                    <th>合箱</th>
+                    <th>开箱</th>
+                    <th>打磨</th>
+                    <th>热处理</th>
+                    <th>精修</th>
+                    <th>毛坯检验</th>
+                    <th>涂装</th>
+                    <th>加工</th>
+                    <th>加工检验</th>
+                </tr>
+                </thead>
+                <tbody id="scrolling-body">
+
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+
+</div>
+</div>
+</body>
+<script>
+
+    function init() {
+        $.ajax({
+            url: '/hdjd/read_excle_screen', // 服务器端处理上传的URL
+            type: 'POST',
+            data: {},
+            cache: false,
+            contentType: 'application/json',
+            success: function (response) {
+                var tbody = document.querySelector('tbody');
+                tbody.innerHTML = '';
+                console.log(tbody)
+                // 处理上传成功的响应
+                response.forEach(function (item) {
+                    var newRow = document.createElement('tr');
+                    var tds = ""
+                    item.forEach(function (value) {
+                        if (value > 0) {
+                            tds += "<td>" + value + "</td>"
+                        } else {
+                            if (value < 0) {
+                                tds += "<td style='color: red'>" + value + "</td>"
+                            } else {
+                                tds += "<td>" + value + "</td>"
+                            }
+
+                        }
+
+                    })
+                    newRow.innerHTML = tds
+                    tbody.appendChild(newRow)
+                })
+
+            },
+            error: function (xhr, status, error) {
+                // 处理上传失败的情况
+                alert('数据初始化失败:' + error);
+            }
+        });
+    }
+
+    init()
+    // 获取所有表格中的单元格
+    var cells = document.querySelectorAll('#scrolling-body tr td');
+    // 遍历每个单元格
+    cells.forEach(function (cell) {
+        // 将单元格中的文本内容转换为数字
+        var value = parseFloat(cell.innerText);
+        // 如果值小于 0，则添加 red 类
+        if (value < 0) {
+            cell.classList.add('red');
+        }
+    });
+
+    function scrollTable() {
+        // 获取 tbody 元素
+        var tbody = $('#scrollingTable tbody');
+        // 获取第一个行
+        var firstRow = tbody.find('tr:first');
+        // 使用动画效果将第一个行向上移动到表格末尾
+        firstRow.appendTo(tbody);
+    }
+
+    var userAgent = navigator.userAgent || navigator.vendor || window.opera;
+
+    if (/android|iphone|ipad|ipod|blackberry|windows phone|opera mini|opera mobi/i.test(userAgent)) {
+        console.log("Mobile device detected.");
+        // 移动设备相关代码
+        $('#scrolling-body').css('overflow', 'auto');
+        $('.table_p').css('overflow', 'scroll');
+
+    } else {
+        console.log("PC device detected.");
+        setInterval(scrollTable, 2000); // 每 2 秒滚动一次
+        // PC设备相关代码
+    }
+
+
+    setInterval(init, 1800000);
+</script>
+
+</html>
+
