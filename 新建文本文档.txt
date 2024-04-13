@@ -12,3 +12,102 @@
 1、邮件完善一下
 2、做一个能滚动的明细大屏
 3、对接企业微信
+
+
+create table t_hdjd_blank_production
+(
+    id                 int auto_increment
+        primary key,
+    production_name    varchar(100) charset latin1 null comment '产品名称',
+    check_num          int                         null comment '报检数量',
+    per_weight         int                         null comment '单件重量',
+    production_company varchar(100) charset latin1 null comment '生产单位',
+    production_unit    varchar(100) charset latin1 null comment '加工单位',
+    production_date    date                        null comment '生产日期'
+)
+    comment '毛坯生产数量';
+
+
+
+SELECT
+    DATE_FORMAT(MIN(production_date), '%Y-%m-%d') AS start_of_week,
+    DATE_FORMAT(MAX(production_date), '%Y-%m-%d') AS end_of_week
+FROM
+    t_hdjd_blank_production
+WHERE
+    WEEK(production_date) = WEEK('2024-03-03');
+
+SELECT
+    DATE_FORMAT(DATE_SUB(CURRENT_DATE(), INTERVAL 1 WEEK), '%Y-%m-%d') AS start_of_last_week,
+    DATE_FORMAT(DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY), '%Y-%m-%d') AS end_of_last_week;
+
+SELECT
+    DATE_FORMAT(DATE_SUB(CURRENT_DATE(), INTERVAL DAYOFWEEK(CURRENT_DATE()) - 1 DAY), '%Y-%m-%d') AS start_of_week,
+    DATE_FORMAT(DATE_ADD(CURRENT_DATE(), INTERVAL 7 - DAYOFWEEK(CURRENT_DATE()) DAY), '%Y-%m-%d') AS end_of_week;
+
+SELECT DAYOFWEEK('2022-04-14') AS day_of_week;
+
+
+
+select WEEK('2024-03-01');
+
+
+SELECT DATE_FORMAT(MIN(production_date), '%Y-%m-%d') AS start_of_week,
+       DATE_FORMAT(MAX(production_date), '%Y-%m-%d') AS end_of_week
+FROM t_hdjd_blank_production
+WHERE WEEK(production_date) = WEEK('2024-03-03');
+
+SELECT DATE_FORMAT(DATE_SUB(CURRENT_DATE(), INTERVAL 1 WEEK), '%Y-%m-%d') AS start_of_last_week,
+       DATE_FORMAT(DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY), '%Y-%m-%d')  AS end_of_last_week;
+
+SELECT DATE_FORMAT(DATE_SUB(CURRENT_DATE(), INTERVAL DAYOFWEEK(CURRENT_DATE()) - 1 DAY), '%Y-%m-%d') AS start_of_week,
+       DATE_FORMAT(DATE_ADD(CURRENT_DATE(), INTERVAL 7 - DAYOFWEEK(CURRENT_DATE()) DAY), '%Y-%m-%d') AS end_of_week;
+
+SELECT DAYOFWEEK('2022-04-14') AS day_of_week;
+
+
+
+select WEEK('2024-03-01');
+
+# 上一周
+SELECT
+    DATE_FORMAT(MIN(production_date), '%Y-%m-%d') AS start_of_last_week,
+    DATE_FORMAT(MAX(production_date), '%Y-%m-%d') AS end_of_last_week
+FROM
+    t_hdjd_blank_production
+WHERE
+    YEARWEEK(production_date) = YEARWEEK('2023-12-19') - 1;
+
+# 大件
+select DAYOFWEEK(production_date) AS day_of_week, sum(check_num) sumvalue
+from t_hdjd_blank_production,
+     (SELECT DATE_FORMAT(MIN(production_date), '%Y-%m-%d') AS start_of_week,
+             DATE_FORMAT(MAX(production_date), '%Y-%m-%d') AS end_of_week
+      FROM t_hdjd_blank_production
+      WHERE WEEK(production_date) = WEEK('2024-03-02')) t1
+where per_weight >= 5000
+  and production_date between t1.start_of_week and t1.end_of_week
+group by production_date;
+
+# 小件
+select DAYOFWEEK(production_date) AS day_of_week, sum(check_num) sumvalue
+from t_hdjd_blank_production,
+     (SELECT DATE_FORMAT(MIN(production_date), '%Y-%m-%d') AS start_of_week,
+             DATE_FORMAT(MAX(production_date), '%Y-%m-%d') AS end_of_week
+      FROM t_hdjd_blank_production
+      WHERE WEEK(production_date) = WEEK('2024-03-02')) t1
+where per_weight < 5000
+  and production_date between t1.start_of_week and t1.end_of_week
+group by production_date;
+
+
+select * from t_hdjd_blank_production where production_date between '2024-03-11' and '2024-03-17'
+
+SELECT
+    DATE_FORMAT(start_date, '%Y-%m-%d') AS start_of_week,
+    DATE_FORMAT(end_date, '%Y-%m-%d') AS end_of_week
+FROM (
+    SELECT
+        DATE_ADD(STR_TO_DATE(CONCAT('2024', ' ', '1', ' ', '1'), '%X %V %w'), INTERVAL ((11 - 1) * 7) DAY) AS start_date,
+        DATE_ADD(STR_TO_DATE(CONCAT('2024', ' ', '1', ' ', '1'), '%X %V %w'), INTERVAL ((11 - 1) * 7 + 6) DAY) AS end_date
+) AS week_16;

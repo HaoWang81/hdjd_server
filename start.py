@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-
+import os.path
+import sys
+sys.path.append(os.path.abspath("util"))
 from io import BytesIO
 
 from flask import Flask, request, jsonify, send_file, render_template
@@ -9,9 +11,12 @@ from werkzeug.utils import secure_filename
 from util import readExcle, buildHtml, readExcleByScreen
 from flask_cors import CORS
 
+from utils.common import config
+
 app = Flask(__name__, static_url_path='/static')
 
 CORS(app)
+
 
 
 @app.route('/hdjd/upload', methods=['POST'])
@@ -87,5 +92,8 @@ def screen():
     return render_template('screen.html')
 
 
+from api.api_screen import api_screen
+
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8080)
+    app.register_blueprint(api_screen)
+    app.run(host="0.0.0.0", port=config['server']['port'])

@@ -1,0 +1,9 @@
+server:
+  port: 8080
+hdjd:
+  mysql:
+    host: 139.196.76.210
+    port: 3306
+    username: hdjd
+    password: hdjd123456
+    database: hdjd
