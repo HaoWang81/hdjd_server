@@ -111,3 +111,4 @@ FROM (
         DATE_ADD(STR_TO_DATE(CONCAT('2024', ' ', '1', ' ', '1'), '%X %V %w'), INTERVAL ((11 - 1) * 7) DAY) AS start_date,
         DATE_ADD(STR_TO_DATE(CONCAT('2024', ' ', '1', ' ', '1'), '%X %V %w'), INTERVAL ((11 - 1) * 7 + 6) DAY) AS end_date
 ) AS week_16;
+

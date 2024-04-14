@@ -11,7 +11,7 @@ from werkzeug.utils import secure_filename
 from util import readExcle, buildHtml, readExcleByScreen
 from flask_cors import CORS
 
-from utils.common import config
+from utils.init import config
 
 app = Flask(__name__, static_url_path='/static')
 
