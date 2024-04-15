@@ -2,7 +2,6 @@
 import json
 import logging
 
-import openpyxl
 import pandas as pd
 from flask import Blueprint, request, jsonify
 
@@ -35,61 +34,129 @@ def fresh():
     insert_sql = "insert into t_hdjd_blank_production(production_name,check_num,per_weight,production_company,production_unit,production_date) values(%s,%s,%s,%s,%s,%s) "
     client.delete("delete from t_hdjd_blank_production ", None)
     client.insert_batch(insert_sql, data)
-    return "None"
+    return "工段明细数据导入成功"
 
-    # 大件数量
-    # 大件吨位
 
-    # 小件数量
-    # 小件吨位
+@api_screen.route('/screen/ngc/fresh', methods=['POST'])
+def ngc_fresh():
+    client = MySQLClient('hdjd')
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'})
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'})
+    pd.set_option('display.max_columns', None)
+    df = pd.read_excel(file, sheet_name="3.21日生产监控")
+    data = []
 
-    # ngc造型数量
-    # ngc造型吨位
-    # ngc欠缺数量
+    for index, row in df.iterrows():
+        if str(row[0]) != 'nan' and str(row[0]) != '?':
+            data.append((row[0], row[34], row[35], row[36], row[37], row[38], row[39], row[40], row[41], row[42],
+                         row[43], row[44], row[45], row[46], row[47], row[48], row[49], row[50]))
+    sql = (
+        "insert into t_hdjd_product_monitor(changhao,zaoxingzhixin,hexiang,maopichengping,kaixiangqingli,qingli,damo,rechuli,jingxiu,caizhijianyan,maopijianyan,qinglibaozhuang,tuzhuang,tuzhuangjianyan,zhongjian,jiagong,jiagongqingli,jiagongjianyan) "
+        "values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)")
+    client.delete("delete  from t_hdjd_product_monitor where DATE_FORMAT(update_time, '%Y-%m-%d')=CURDATE() ", None)
+    client.insert_batch(sql, data)
+    return "生产监控数据导入成功"
+
+
+ngc_sql_constants = {
+    "表格": "select changhao,zaoxingzhixin,hexiang,kaixiangqingli,damo,rechuli,jingxiu,maopijianyan,tuzhuang, jiagong,jiagongjianyan from t_hdjd_product_monitor where changhao like '%NGC%'",
+    "ngc欠数": """
+    select DATE_FORMAT(t1.date, '%Y-%m-%d'),ifnull(t.sum_num,0) from (
+SELECT IFNULL(ABS(SUM(zaoxingzhixin)), 0) AS sum_num, DATE_FORMAT(update_time, '%Y-%m-%d') as update_time
+      FROM t_hdjd_product_monitor
+      WHERE zaoxingzhixin < 0
+        AND changhao LIKE '%NGC%'
+        AND update_time BETWEEN DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND CURDATE() + INTERVAL 1 DAY - INTERVAL 1 SECOND group by t_hdjd_product_monitor.update_time) t right join (
+
+SELECT DATE_SUB(CURDATE(), INTERVAL 6 DAY) AS date
+UNION ALL
+SELECT DATE_SUB(CURDATE(), INTERVAL 5 DAY)
+UNION ALL
+SELECT DATE_SUB(CURDATE(), INTERVAL 4 DAY)
+UNION ALL
+SELECT DATE_SUB(CURDATE(), INTERVAL 3 DAY)
+UNION ALL
+SELECT DATE_SUB(CURDATE(), INTERVAL 2 DAY)
+UNION ALL
+SELECT DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+UNION ALL
+SELECT CURDATE()
+)  t1 on t.update_time=t1.date order by  date
+    """
+}
+
+import numpy as np
+
+
+@api_screen.route('/screen/ngc/chart', methods=['POST'])
+def ngc_chart():
+    data = request.json
+    client = MySQLClient('hdjd')
+    tables = client.query(ngc_sql_constants['表格'], None)
+    charts = client.query(ngc_sql_constants['ngc欠数'], None)
+    result_table = []
+    result_charts = dict()
+    for item in tables:
+        result_table.append(np.array(item).tolist())
+    y = []
+    x = []
+    for item in charts:
+        x = item[0]
+        y = str(item[1])
+    result_charts[x] = x
+    result_charts[y] = y
+    result = dict()
+    result['table'] = result_table
+    result['charts'] = result_charts
+    return json.dumps(result, ensure_ascii=False)
 
 
 card_sql_constants = {
     "大件数量":
         """
-     select sum(check_num)
+     select sum(check_num) 
 from t_hdjd_blank_production
 where per_weight > 5000
-  and production_date between %s and %s
+  and production_date  = %s
      """,
     "大件吨位":
         """
      select round(ifnull(sum(check_num * per_weight) / 1000, 0)) as product_weight
 from t_hdjd_blank_production
 where per_weight > 5000
-  and production_date between %s and %s
+  and production_date = %s
      """,
     "小件数量":
         """
 select sum(check_num)
 from t_hdjd_blank_production
-where per_weight < 5000
-  and production_date between  %s and %s
+where per_weight < 5000 and production_company = '本公司'
+  and production_date = %s 
 """,
     "小件吨位":
         """
 select round(ifnull(sum(check_num * per_weight) / 1000, 0)) as product_weight
 from t_hdjd_blank_production
-where per_weight < 5000
-  and production_date between %s and %s
+where per_weight < 5000 and production_company = '本公司'
+    # ngc造型吨位
+  and production_date = %s
 """,
     "ngc造型数量":
         """
         select sum(check_num)
    from t_hdjd_blank_production
    where LOWER(production_name) like '%ngc%'
-     and production_date between %s and %s
+     and production_date = %s
         """,
     "ngc造型吨位":
         """
         select round(ifnull(sum(check_num * per_weight) / 1000, 0)) as product_weight
         from t_hdjd_blank_production
         where LOWER(production_name) like '%ngc%'
-          and production_date between %s and %s
+          and production_date = %s
         """,
     "ngc欠缺数量": None,
 
@@ -127,7 +194,7 @@ from (
         WHEN 6 THEN '周日'
     END ) AS day_of_week,sum(check_num) as check_num
 from t_hdjd_blank_production
-where per_weight < 5000
+where per_weight < 5000 and production_company = '本公司'
   and production_date between %s and %s  group by production_date
     ) a
          right join t_hdjd_code_weeknum b on b.week_name = a.day_of_week order by  b.week_num
@@ -163,12 +230,12 @@ def screen_card():
         data = {}
     date_str = data.get('date_str', '')
 
-    dates = client.getWeekDateAreaByCurrent(date_str)
+    # dates = client.getWeekDateAreaByCurrent(date_str)
 
     result = dict()
     for key, value in card_sql_constants.items():
         if value is not None and len(value) > 0:
-            rows = client.query(value, (dates[0], dates[1]))
+            rows = client.query(value, (date_str,))
             if len(rows) > 0 and rows[0][0] is not None:
                 result[key] = str(rows[0][0])
             else:
