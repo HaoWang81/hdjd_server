@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
+import json
 import os.path
 import sys
+
+import numpy as np
+
+from utils.db import MySQLClient
+
 sys.path.append(os.path.abspath("util"))
 from io import BytesIO
 
@@ -14,6 +20,7 @@ from flask_cors import CORS
 from utils.init import config
 
 app = Flask(__name__, static_url_path='/static')
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 10MB
 
 CORS(app)
 
@@ -79,7 +86,12 @@ def download_excel():
 
 @app.route('/hdjd/read_excle_screen', methods=['POST'])
 def read_excel_screen():
-    return readExcleByScreen("生产监控.xlsx")
+    client = MySQLClient('hdjd')
+    tables = client.query(ngc_sql_constants['表格'], None)
+    result_table=[]
+    for item in tables:
+        result_table.append(np.array(item).tolist())
+    return  json.dumps(result_table, ensure_ascii=False)
 
 
 @app.route('/hdjd/upload')
@@ -92,7 +104,7 @@ def screen():
     return render_template('screen.html')
 
 
-from api.api_screen import api_screen
+from api.api_screen import api_screen, ngc_sql_constants
 
 if __name__ == '__main__':
     app.register_blueprint(api_screen)

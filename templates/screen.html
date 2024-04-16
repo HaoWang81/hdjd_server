@@ -102,11 +102,12 @@
             cache: false,
             contentType: 'application/json',
             success: function (response) {
+                console.log(response)
                 var tbody = document.querySelector('tbody');
                 tbody.innerHTML = '';
                 console.log(tbody)
                 // 处理上传成功的响应
-                response.forEach(function (item) {
+                JSON.parse(response).forEach(function (item) {
                     var newRow = document.createElement('tr');
                     var tds = ""
                     item.forEach(function (value) {
