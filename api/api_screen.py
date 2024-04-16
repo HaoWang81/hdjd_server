@@ -104,10 +104,10 @@ def ngc_chart():
     y = []
     x = []
     for item in charts:
-        x = item[0]
-        y = str(item[1])
-    result_charts[x] = x
-    result_charts[y] = y
+        x.append(item[0])
+        y .append(str(item[1]))
+    result_charts["x"] = x
+    result_charts["y"] = y
     result = dict()
     result['table'] = result_table
     result['charts'] = result_charts
