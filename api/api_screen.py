@@ -62,7 +62,7 @@ def ngc_fresh():
 
 
 ngc_sql_constants = {
-    "表格": "select changhao,zaoxingzhixin,hexiang,kaixiangqingli,damo,rechuli,jingxiu,maopijianyan,tuzhuang, jiagong,jiagongjianyan from t_hdjd_product_monitor where changhao like '%NGC%'",
+    "表格": "select changhao,zaoxingzhixin,hexiang,kaixiangqingli,damo,rechuli,jingxiu,maopijianyan,tuzhuang, jiagong,jiagongjianyan from t_hdjd_product_monitor where  DATE_FORMAT(update_time, '%Y-%m-%d')=CURDATE()",
     "ngc欠数": """
     select DATE_FORMAT(t1.date, '%Y-%m-%d'),ifnull(t.sum_num,0) from (
 SELECT IFNULL(ABS(SUM(zaoxingzhixin)), 0) AS sum_num, DATE_FORMAT(update_time, '%Y-%m-%d') as update_time
