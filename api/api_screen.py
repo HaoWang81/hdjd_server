@@ -50,25 +50,26 @@ def ngc_fresh():
     data = []
 
     for index, row in df.iterrows():
-        if str(row[0]) != 'nan' and str(row[0]) != '?':
-            data.append((row[0], row[34], row[35], row[36], row[37], row[38], row[39], row[40], row[41], row[42],
-                         row[43], row[44], row[45], row[46], row[47], row[48], row[49], row[50]))
+        if str(row[33]) != 'nan' and str(row[33]) != '?':
+            data.append((row[33], row[34], row[35], row[36], row[37], row[38], row[39], row[40], row[41], row[42],
+                         row[43], row[44], row[45], row[46], row[47], row[48], row[49], row[50],(1 if row[51]==1 else 0)))
     sql = (
-        "insert into t_hdjd_product_monitor(changhao,zaoxingzhixin,hexiang,maopichengping,kaixiangqingli,qingli,damo,rechuli,jingxiu,caizhijianyan,maopijianyan,qinglibaozhuang,tuzhuang,tuzhuangjianyan,zhongjian,jiagong,jiagongqingli,jiagongjianyan) "
-        "values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)")
+        "insert into t_hdjd_product_monitor(changhao,zaoxingzhixin,hexiang,maopichengping,kaixiangqingli,qingli,damo,rechuli,jingxiu,caizhijianyan,maopijianyan,qinglibaozhuang,tuzhuang,tuzhuangjianyan,zhongjian,jiagong,jiagongqingli,jiagongjianyan,count_flag) "
+        "values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)")
     client.delete("delete  from t_hdjd_product_monitor where DATE_FORMAT(update_time, '%Y-%m-%d')=CURDATE() ", None)
     client.insert_batch(sql, data)
     return "生产监控数据导入成功"
 
 
 ngc_sql_constants = {
-    "表格": "select changhao,zaoxingzhixin,hexiang,kaixiangqingli,damo,rechuli,jingxiu,maopijianyan,tuzhuang, jiagong,jiagongjianyan from t_hdjd_product_monitor where  DATE_FORMAT(update_time, '%Y-%m-%d')=CURDATE()",
+    "表格": "select changhao,zaoxingzhixin,hexiang,kaixiangqingli,damo,rechuli,jingxiu,maopijianyan,tuzhuang, jiagong,jiagongjianyan from t_hdjd_product_monitor where  DATE_FORMAT(update_time, '%Y-%m-%d')=CURDATE() and (zaoxingzhixin<0 or hexiang <0 or kaixiangqingli<0 or damo<0 or rechuli<0 or  jingxiu < 0 or maopijianyan < 0 or tuzhuang<0 or  jiagong <0 or jiagongjianyan<0) ",
     "ngc欠数": """
     select DATE_FORMAT(t1.date, '%Y-%m-%d'),ifnull(t.sum_num,0) from (
 SELECT IFNULL(ABS(SUM(zaoxingzhixin)), 0) AS sum_num, DATE_FORMAT(update_time, '%Y-%m-%d') as update_time
       FROM t_hdjd_product_monitor
       WHERE zaoxingzhixin < 0
         AND changhao LIKE '%NGC%'
+        and count_flag='1'
         AND update_time BETWEEN DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND CURDATE() + INTERVAL 1 DAY - INTERVAL 1 SECOND group by t_hdjd_product_monitor.update_time) t right join (
 
 SELECT DATE_SUB(CURDATE(), INTERVAL 6 DAY) AS date
@@ -158,7 +159,12 @@ where per_weight < 5000 and production_company = '本公司'
         where LOWER(production_name) like '%ngc%'
           and production_date = %s
         """,
-    "ngc欠缺数量": None,
+    "ngc欠缺数量": """
+            select abs(sum(zaoxingzhixin))
+        from t_hdjd_product_monitor
+        where LOWER(changhao) like '%ngc%'
+          and DATE_FORMAT(update_time, '%Y-%m-%d') = CURDATE() and zaoxingzhixin<0  and count_flag='1'
+    """,
 
 }
 
@@ -212,7 +218,7 @@ from (
         WHEN 6 THEN '周日'
     END ) AS day_of_week,sum(check_num) as check_num
 from t_hdjd_blank_production
-where per_weight > 5000 and LOWER(production_name) like '%ngc%'
+where  LOWER(production_name) like '%ngc%'
   and production_date between %s and %s  group by production_date 
     ) a
          right join t_hdjd_code_weeknum b on b.week_name = a.day_of_week order by b.week_num
@@ -235,7 +241,11 @@ def screen_card():
     result = dict()
     for key, value in card_sql_constants.items():
         if value is not None and len(value) > 0:
-            rows = client.query(value, (date_str,))
+            rows=[]
+            if '%s' in value:
+                rows = client.query(value, (date_str,))
+            else:
+                rows = client.query(value, None)
             if len(rows) > 0 and rows[0][0] is not None:
                 result[key] = str(rows[0][0])
             else:
