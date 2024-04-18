@@ -1,4 +1,5 @@
 # 铸铁毛坯生产监控
+import datetime
 import json
 import logging
 
@@ -23,11 +24,11 @@ def fresh():
     data = []
 
     for index, row in df.iterrows():
-        production_date = ''
+        production_date = None
         try:
             date = pd.to_datetime(row[0], origin='1899-12-30', unit='D', errors='raise', infer_datetime_format=False,
                                   exact=True, cache=False, utc=None, format=None)
-            production_date = date
+            production_date = str(date)
         except Exception as e:
             logging.error(f'非日期格式,{e}')
         data.append((row[1], row[2], row[3], row[5], row[9], production_date))
@@ -52,7 +53,8 @@ def ngc_fresh():
     for index, row in df.iterrows():
         if str(row[33]) != 'nan' and str(row[33]) != '?':
             data.append((row[33], row[34], row[35], row[36], row[37], row[38], row[39], row[40], row[41], row[42],
-                         row[43], row[44], row[45], row[46], row[47], row[48], row[49], row[50],(1 if row[51]==1 else 0)))
+                         row[43], row[44], row[45], row[46], row[47], row[48], row[49], row[50],
+                         (1 if row[51] == 1 else 0)))
     sql = (
         "insert into t_hdjd_product_monitor(changhao,zaoxingzhixin,hexiang,maopichengping,kaixiangqingli,qingli,damo,rechuli,jingxiu,caizhijianyan,maopijianyan,qinglibaozhuang,tuzhuang,tuzhuangjianyan,zhongjian,jiagong,jiagongqingli,jiagongjianyan,count_flag) "
         "values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)")
@@ -106,7 +108,7 @@ def ngc_chart():
     x = []
     for item in charts:
         x.append(item[0])
-        y .append(str(item[1]))
+        y.append(str(item[1]))
     result_charts["x"] = x
     result_charts["y"] = y
     result = dict()
@@ -241,7 +243,7 @@ def screen_card():
     result = dict()
     for key, value in card_sql_constants.items():
         if value is not None and len(value) > 0:
-            rows=[]
+            rows = []
             if '%s' in value:
                 rows = client.query(value, (date_str,))
             else:
