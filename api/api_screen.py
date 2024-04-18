@@ -51,7 +51,7 @@ def ngc_fresh():
     data = []
 
     for index, row in df.iterrows():
-        if str(row[33]) != 'nan' and str(row[33]) != '?':
+        if (index + 1) >= 3 and str(row[33]) != 'nan' and str(row[33]) != '?':
             data.append((row[33], row[34], row[35], row[36], row[37], row[38], row[39], row[40], row[41], row[42],
                          row[43], row[44], row[45], row[46], row[47], row[48], row[49], row[50],
                          (1 if row[51] == 1 else 0)))
