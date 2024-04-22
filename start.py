@@ -25,7 +25,6 @@ app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 10MB
 CORS(app)
 
 
-
 @app.route('/hdjd/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
@@ -88,10 +87,10 @@ def download_excel():
 def read_excel_screen():
     client = MySQLClient('hdjd')
     tables = client.query(ngc_sql_constants['表格'], None)
-    result_table=[]
+    result_table = []
     for item in tables:
         result_table.append(np.array(item).tolist())
-    return  json.dumps(result_table, ensure_ascii=False)
+    return json.dumps(result_table, ensure_ascii=False)
 
 
 @app.route('/hdjd/upload')
@@ -105,7 +104,9 @@ def screen():
 
 
 from api.api_screen import api_screen, ngc_sql_constants
+from api.api_settings import api_settings
 
 if __name__ == '__main__':
     app.register_blueprint(api_screen)
+    app.register_blueprint(api_settings)
     app.run(host="0.0.0.0", port=config['server']['port'])
