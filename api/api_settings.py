@@ -58,14 +58,36 @@ def settings_upload():
             df.fillna(0, inplace=True)
             data = []
             for index, row in df.iterrows():
-                if (index + 1) >= 1 and str(row[0]) != 'nan' and str(row[0]) != '?':
+                if (index + 1) >= 2 and str(row[0]) != 'nan' and str(row[0]) != '?':
                     data.append((row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9],
-                                 row[10], row[11], row[12], row[13]))
-            sql = (
-                "insert into t_hdjd_product_monitor_lv(changhao,jinrizaoxing,benzhouzaoxing,damo,rechuli,jingxiu,maopizaizhi,maopichengpin,jinrijiagong,benzhoujiagong,jiagongzaizhi,jinriqingli,benzhouqingli,qinglizaizhi) "
-                "values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)")
+                                 row[10], row[11], row[12], row[13], row[14], row[15], row[16], row[17], row[18],
+                                 row[19]))
+
+            sql = ("""
+            insert into t_hdjd_product_monitor_lv ( changhao,
+            jinrizaoxing,
+            benzhouzaoxing,
+            benyuezaoxingqianshu,
+            jinrizhuanxu,
+            benzhouzhuanxu,
+            benyuezhuanxuqianshu,
+            maopichengpin,
+            damo,
+            rechuli,
+            jingxiu,
+            maopizaizhi,
+            jinrijiagong,
+            benzhoujiagong,
+            yuedujiagong,
+            jiagongzaizhi,
+            jinriqingli,
+            benzhouqingli,
+            yueduqingli,
+            qinglizaizhi
+            ) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            """)
             client.delete(
-                "delete  from t_hdjd_product_monitor where DATE_FORMAT(update_time, '%Y-%m-%d')=CURDATE() ", None)
+                "delete  from t_hdjd_product_monitor_lv where DATE_FORMAT(update_time, '%Y-%m-%d')=CURDATE() ", None)
             client.insert_batch(sql, data)
         return f'成功'
     except Exception as e:

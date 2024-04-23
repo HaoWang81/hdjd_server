@@ -242,7 +242,26 @@ def screen_highWeight():
 @api_screen.route('/screen/lv_monitor/', methods=['POST'])
 def screen_lv_monitor():
     client = MySQLClient('hdjd')
-    sql = f"select changhao,jinrizaoxing,benzhouzaoxing,damo,rechuli,jingxiu,maopizaizhi,maopichengpin,jinrijiagong,benzhoujiagong,jiagongzaizhi,jinriqingli,benzhouqingli,qinglizaizhi from t_hdjd_product_monitor_lv where  DATE_FORMAT(update_time, '%Y-%m-%d') = CURDATE() and (jinrizaoxing!=0 or benzhouzaoxing!=0 or damo!=0 or  rechuli!=0 or jingxiu!=0 or maopizaizhi!=0 or maopichengpin!=0 or jinrijiagong!=0 or benzhoujiagong!=0 or jiagongzaizhi!=0 or jinriqingli!=0 or benzhouqingli!=0 or qinglizaizhi!=0)"
+    sql = f"""select changhao,
+            jinrizaoxing,
+            benzhouzaoxing,
+            benyuezaoxingqianshu,
+            jinrizhuanxu,
+            benzhouzhuanxu,
+            benyuezhuanxuqianshu,
+            maopichengpin,
+            damo,
+            rechuli,
+            jingxiu,
+            maopizaizhi,
+            jinrijiagong,
+            benzhoujiagong,
+            yuedujiagong,
+            jiagongzaizhi,
+            jinriqingli,
+            benzhouqingli,
+            yueduqingli,
+            qinglizaizhi from t_hdjd_product_monitor_lv where  DATE_FORMAT(update_time, '%Y-%m-%d') = CURDATE() and (jinrizaoxing!=0 or benzhouzaoxing!=0 or damo!=0 or  rechuli!=0 or jingxiu!=0 or maopizaizhi!=0 or maopichengpin!=0 or jinrijiagong!=0 or benzhoujiagong!=0 or jiagongzaizhi!=0 or jinriqingli!=0 or benzhouqingli!=0 or qinglizaizhi!=0)"""
     result = client.query(sql, None)
     serialized_data = [list(item) for item in result]
 
