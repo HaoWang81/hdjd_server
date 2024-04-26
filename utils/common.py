@@ -14,6 +14,11 @@ def currentDateYYYYMMDD() -> str:
     return yesterday.strftime("%Y-%m-%d")
 
 
+# 定义定时执行的函数
+def job():
+    print("定时任务执行！")
+
+
 if __name__ == '__main__':
     print(currentDateYYYYMMDD())
 

@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
 import json
+import logging
 import os.path
 import sys
+import threading
 
 import numpy as np
+from apscheduler.schedulers.blocking import BlockingScheduler
 
 from utils.db import MySQLClient
+from utils.scheduleUtil import my_task
 
 sys.path.append(os.path.abspath("util"))
 from io import BytesIO
@@ -23,6 +27,13 @@ app = Flask(__name__, static_url_path='/static')
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 10MB
 
 CORS(app)
+
+
+@app.before_request
+def before_request():
+    client = MySQLClient('hdjd')
+    client.insert(f'insert into t_hdjd_log(ip,url) values (%s,%s)',
+                  (request.headers.get('X-Forwarded-For'), request.url))
 
 
 @app.route('/hdjd/upload', methods=['POST'])
@@ -105,8 +116,26 @@ def screen():
 
 from api.api_screen import api_screen, ngc_sql_constants
 from api.api_settings import api_settings
+from api.api_home import api_home
+
+
+def start_schedule():
+    # 创建一个调度器实例
+    scheduler = BlockingScheduler()
+    # 添加任务，每天凌晨12点执行
+    scheduler.add_job(my_task, 'cron', hour=0)
+
+    # 启动调度器
+    try:
+        scheduler.start()
+    except KeyboardInterrupt:
+        pass
+
 
 if __name__ == '__main__':
     app.register_blueprint(api_screen)
     app.register_blueprint(api_settings)
+    app.register_blueprint(api_home)
+    schedule_thread = threading.Thread(target=start_schedule)
+    schedule_thread.start()
     app.run(host="0.0.0.0", port=config['server']['port'])

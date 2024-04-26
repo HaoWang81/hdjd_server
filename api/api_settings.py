@@ -89,6 +89,47 @@ def settings_upload():
             client.delete(
                 "delete  from t_hdjd_product_monitor_lv where DATE_FORMAT(update_time, '%Y-%m-%d')=CURDATE() ", None)
             client.insert_batch(sql, data)
+        elif type == '4':
+            df = pd.read_excel(file, sheet_name="铁件生产监控")
+            df.fillna(0, inplace=True)
+            data = []
+            for index, row in df.iterrows():
+                if (index + 1) >= 2 and str(row[0]) != 'nan' and str(row[0]) != '?':
+                    data.append((row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9],
+                                 row[10], row[11], row[12], row[13], row[14], row[15], row[16], row[17], row[18],
+                                 row[19], row[20], row[21], row[22], row[23], row[24], row[25]))
+
+            sql = ("""
+                   insert into t_hdjd_product_monitor_tie ( changhao,
+       jinrizhixin,
+       jinrihexiang,
+       jinrikaixiang,
+       benzhouhexiang,
+       yueduzhixin,
+       jinrizhuanxu,
+       benzhouzhuanxu,
+       yueduzhuanxu,
+       yueduxiaoshou,
+       maopichengpin,
+       damo,
+       rechuli,
+       jingxiu,
+       maopijianyan,
+       tuzhuang,
+       maopizaizhi,
+       jinrijiagong,
+       benzhoujiagong,
+       yuedujiagong,
+       jiagong_yueduxiaoshou,
+       jiagongzaizhi,
+       jinriqingli,
+       benzhouqingli,
+       yueduqingli,
+       qinglizaizhi) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                   """)
+            client.delete(
+                "delete  from t_hdjd_product_monitor_tie where DATE_FORMAT(update_time, '%Y-%m-%d')=CURDATE() ", None)
+            client.insert_batch(sql, data)
         return f'成功'
     except Exception as e:
         return f'异常：{e}'

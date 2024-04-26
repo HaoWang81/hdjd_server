@@ -14,6 +14,13 @@ class MySQLClient:
             charset="utf8mb4"
         )
 
+    def exec(self, sql, param):
+        if not self.conn.is_connected():
+            self.conn.reconnect()
+        cursor = self.conn.cursor()
+        cursor.execute(sql, param)
+        cursor.close()
+        self.conn.close()
     def query(self, sql,param):
         if not self.conn.is_connected():
             self.conn.reconnect()

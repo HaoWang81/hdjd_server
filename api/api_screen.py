@@ -266,3 +266,38 @@ def screen_lv_monitor():
     serialized_data = [list(item) for item in result]
 
     return json.dumps(serialized_data, ensure_ascii=False)
+
+
+@api_screen.route('/screen/tie_monitor/', methods=['POST'])
+def screen_tie_monitor():
+    client = MySQLClient('hdjd')
+    sql = f"""select changhao,
+       jinrizhixin,
+       jinrihexiang,
+       jinrikaixiang,
+       benzhouhexiang,
+       yueduzhixin,
+       jinrizhuanxu,
+       benzhouzhuanxu,
+       yueduzhuanxu,
+       yueduxiaoshou,
+       maopichengpin,
+       damo,
+       rechuli,
+       jingxiu,
+       maopijianyan,
+       tuzhuang,
+       maopizaizhi,
+       jinrijiagong,
+       benzhoujiagong,
+       yuedujiagong,
+       jiagong_yueduxiaoshou,
+       jiagongzaizhi,
+       jinriqingli,
+       benzhouqingli,
+       yueduqingli,
+       qinglizaizhi from t_hdjd_product_monitor_tie where  DATE_FORMAT(update_time, '%Y-%m-%d') = CURDATE() and ( damo!=0 or  rechuli!=0 or jingxiu!=0 or maopizaizhi!=0 or maopichengpin!=0 or jinrijiagong!=0 or benzhoujiagong!=0 or jiagongzaizhi!=0 or jinriqingli!=0 or benzhouqingli!=0 or qinglizaizhi!=0)"""
+    result = client.query(sql, None)
+    serialized_data = [list(item) for item in result]
+
+    return json.dumps(serialized_data, ensure_ascii=False)
