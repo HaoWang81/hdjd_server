@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 import json
-import logging
+
 import os.path
 import sys
 import threading
 
 import numpy as np
 from apscheduler.schedulers.blocking import BlockingScheduler
+from loguru import logger
 
 from utils.db import MySQLClient
 from utils.scheduleUtil import my_task
@@ -14,14 +15,15 @@ from utils.scheduleUtil import my_task
 sys.path.append(os.path.abspath("util"))
 from io import BytesIO
 
-from flask import Flask, request, jsonify, send_file, render_template
+from flask import Flask, request, jsonify, send_file, render_template, redirect
 import pandas as pd
-from werkzeug.utils import secure_filename
 
-from util import readExcle, buildHtml, readExcleByScreen
+from util import readExcle, buildHtml
 from flask_cors import CORS
 
 from utils.init import config
+
+logger.add("./hdjd.log", rotation="500 MB", level="DEBUG")
 
 app = Flask(__name__, static_url_path='/static')
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 10MB
@@ -111,6 +113,11 @@ def upload():
 
 @app.route('/screen')
 def screen():
+    return redirect('http://www.laotianshi.top/#/screen/tie_monitor')
+
+
+@app.route('/ngc_monitor')
+def ngc_monitor():
     return render_template('screen.html')
 
 
@@ -121,9 +128,10 @@ from api.api_home import api_home
 
 def start_schedule():
     # 创建一个调度器实例
+    logger.info('创建一个调度器实例')
     scheduler = BlockingScheduler()
     # 添加任务，每天凌晨12点执行
-    scheduler.add_job(my_task, 'cron', hour=0)
+    scheduler.add_job(my_task, 'cron', hour=1, minute=6)
 
     # 启动调度器
     try:
@@ -133,6 +141,7 @@ def start_schedule():
 
 
 if __name__ == '__main__':
+    logger.info('...启动服务...')
     app.register_blueprint(api_screen)
     app.register_blueprint(api_settings)
     app.register_blueprint(api_home)

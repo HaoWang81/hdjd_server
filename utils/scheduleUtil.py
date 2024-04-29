@@ -1,10 +1,10 @@
-from apscheduler.schedulers.blocking import BlockingScheduler
-import datetime
+from loguru import logger
 
 from utils.db import MySQLClient
 
 
 def my_task():
+    logger.info('执行数据同步任务')
     sql_lv = f"""
     insert into t_hdjd_product_monitor_lv (changhao,
             jinrizaoxing,
@@ -104,12 +104,12 @@ def my_task():
         """
 
     sql_ngc = f"""
-    insert into t_hdjd_product_monitor(changhao,zaoxingzhixin,hexiang,kaixiangqingli,damo,rechuli,jingxiu,maopijianyan,tuzhuang, jiagong,jiagongjianyan,count_flag )
-    select changhao,zaoxingzhixin,hexiang,kaixiangqingli,damo,rechuli,jingxiu,maopijianyan,tuzhuang, jiagong,jiagongjianyan,count_flag from t_hdjd_product_monitor where  DATE_FORMAT(update_time, '%Y-%m-%d')=DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+    insert into t_hdjd_product_monitor(changhao,zaoxingzhixin,hexiang,maopichengping,kaixiangqingli,qingli,damo,rechuli,jingxiu,caizhijianyan,maopijianyan,qinglibaozhuang,tuzhuang,tuzhuangjianyan,zhongjian, jiagong,jiagongqingli,jiagongjianyan,count_flag )
+    select changhao,zaoxingzhixin,hexiang,maopichengping,kaixiangqingli,qingli,damo,rechuli,jingxiu,caizhijianyan,maopijianyan,qinglibaozhuang,tuzhuang,tuzhuangjianyan,zhongjian, jiagong,jiagongqingli,jiagongjianyan,count_flag  from t_hdjd_product_monitor where  DATE_FORMAT(update_time, '%Y-%m-%d')=DATE_SUB(CURDATE(), INTERVAL 1 DAY)
     """
 
     client = MySQLClient("hdjd")
     client.exec(sql_lv, None)
     client.exec(sql_ngc, None)
     client.exec(sql_tie, None)
-    print("任务执行中...")
+    logger.info('数据同步任务结束')
