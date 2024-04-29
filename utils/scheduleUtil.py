@@ -104,16 +104,12 @@ def my_task():
         """
 
     sql_ngc = f"""
-    insert into t_hdjd_product_monitor(changhao,zaoxingzhixin,hexiang,kaixiangqingli,damo,rechuli,jingxiu,maopijianyan,tuzhuang, jiagong,jiagongjianyan )
-    select changhao,zaoxingzhixin,hexiang,kaixiangqingli,damo,rechuli,jingxiu,maopijianyan,tuzhuang, jiagong,jiagongjianyan from t_hdjd_product_monitor where  DATE_FORMAT(update_time, '%Y-%m-%d')=DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+    insert into t_hdjd_product_monitor(changhao,zaoxingzhixin,hexiang,kaixiangqingli,damo,rechuli,jingxiu,maopijianyan,tuzhuang, jiagong,jiagongjianyan,count_flag )
+    select changhao,zaoxingzhixin,hexiang,kaixiangqingli,damo,rechuli,jingxiu,maopijianyan,tuzhuang, jiagong,jiagongjianyan,count_flag from t_hdjd_product_monitor where  DATE_FORMAT(update_time, '%Y-%m-%d')=DATE_SUB(CURDATE(), INTERVAL 1 DAY)
     """
-
 
     client = MySQLClient("hdjd")
     client.exec(sql_lv, None)
     client.exec(sql_ngc, None)
     client.exec(sql_tie, None)
     print("任务执行中...")
-
-
-
