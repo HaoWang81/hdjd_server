@@ -130,6 +130,50 @@ def settings_upload():
             client.delete(
                 "delete  from t_hdjd_product_monitor_tie where DATE_FORMAT(update_time, '%Y-%m-%d')=CURDATE() ", None)
             client.insert_batch(sql, data)
+        elif type == '5':  # ngc内部监控
+            df = pd.read_excel(file, sheet_name="南高齿监控表")
+            df.fillna(0, inplace=True)
+            data = []
+            for index, row in df.iterrows():
+                if (index + 1) >= 3 and str(row[0]) != 'nan' and str(row[0]) != '?':
+                    data.append((row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9],
+                                 row[10], row[11], row[12], row[13], row[14], row[15], row[16], row[17], row[18],
+                                 row[19], row[20], row[21], row[22], row[23], row[24], row[25], row[25]))
+            sql = ("""
+                               insert into t_hdjd_product_monitor_ngc ( 
+                               
+                                changhao,
+       zx_dmjz,
+       zx_jrkx,
+       zx_jrqs,
+       zx_bzzx,
+       zx_ydzx,
+       dm_jrdm,
+       dm_jrrcl,
+       dm_jrjx,
+       dm_jrndtjy,
+       dm_bzdm,
+       dm_yddm,
+       dm_mpzz,
+       yq_jryq,
+       yq_jryqjy,
+       yq_bzyq,
+       yq_ydyq,
+       jg_jrjg,
+       jg_jrjgjy,
+       jg_bzjg,
+       jg_ydjg,
+       jg_jgdw,
+       jg_jgzz,
+       mp_mpzjg,
+       mp_bzmpzjg,
+       mp_ydmpzjg,
+       mp_cpk
+                               ) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                               """)
+            client.delete(
+                "delete  from t_hdjd_product_monitor_ngc where DATE_FORMAT(update_time, '%Y-%m-%d')=CURDATE() ", None)
+            client.insert_batch(sql, data)
         return f'成功'
     except Exception as e:
         return f'异常：{e}'
