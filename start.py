@@ -131,13 +131,15 @@ def start_schedule():
     logger.info('创建一个调度器实例')
     scheduler = BlockingScheduler()
     # 添加任务，每天凌晨12点执行
-    scheduler.add_job(my_task, 'cron', hour=1, minute=6)
+    scheduler.add_job(my_task, 'cron', hour=0, minute=41)
 
     # 启动调度器
     try:
         scheduler.start()
+        while True:
+            pass
     except KeyboardInterrupt:
-        pass
+        scheduler.shutdown()
 
 
 if __name__ == '__main__':

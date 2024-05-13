@@ -81,6 +81,30 @@ def get_tieCount():
     })
     return json.dumps(result, ensure_ascii=False)
 
+@api_home.route('/home/ngcInnerCount', methods=['POST'])
+def get_ngcInnerCount():
+    sql = f"""
+        select cast(t1.hour as signed ) hour,ifnull(t.sum,0) sum from (
+        select DATE_FORMAT(update_time, '%H') hour, count(0) sum
+        from t_hdjd_log
+        where ip is not null
+        and url = 'http://www.laotianshi.top/screen/ngc_monitor/'
+        and date_format(update_time, '%Y-%m-%d') = CURDATE()
+        group by DATE_FORMAT(update_time, '%H')  ) t right join  t_hdjd_code_hour t1 on t.hour=t1.hour order by  hour
+    """
+    client = MySQLClient("hdjd")
+    rows = client.query(sql, None)
+    x = []
+    y = []
+    for row in rows:
+        x.append(row[0])
+        y.append(row[1])
+    result = dict({
+        "x": x,
+        "y": y
+    })
+    return json.dumps(result, ensure_ascii=False)
+
 
 @api_home.route('/home/ipCount', methods=['POST'])
 def get_ipCount():
@@ -89,7 +113,7 @@ def get_ipCount():
     select count(ip)
 from t_hdjd_log
 where ip is not null
-  and (url = 'http://www.laotianshi.top/screen' or url = 'http://www.laotianshi.top/screen/lv_monitor/' or url = 'http://www.laotianshi.top/screen/tie_monitor/')
+  and (url = 'http://www.laotianshi.top/screen' or url = 'http://www.laotianshi.top/screen/lv_monitor/' or url = 'http://www.laotianshi.top/screen/tie_monitor/' or url = 'http://www.laotianshi.top/screen/ngc_monitor/')
   and date_format(update_time, '%Y-%m-%d') = CURDATE()
     """, None)
     result = dict({
@@ -103,7 +127,7 @@ where ip is not null
     select count(distinct ip)
 from t_hdjd_log
 where ip is not null
-  and (url = 'http://www.laotianshi.top/screen' or url = 'http://www.laotianshi.top/screen/lv_monitor/')
+  and (url = 'http://www.laotianshi.top/screen' or url = 'http://www.laotianshi.top/screen/lv_monitor/ ' or url = 'http://www.laotianshi.top/screen/tie_monitor/' or url = 'http://www.laotianshi.top/screen/ngc_monitor/' )
   and date_format(update_time, '%Y-%m-%d') = CURDATE()
     """, None)
     if len(rows_ipDisCount) > 0:

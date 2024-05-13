@@ -340,3 +340,115 @@ def screen_tie_monitor():
     serialized_data = [list(item) for item in result]
 
     return json.dumps(serialized_data, ensure_ascii=False)
+
+
+@api_screen.route('/screen/lv_detail/card', methods=['POST'])
+def screen_lv_detail_card():
+    sql = """
+    select DATE_FORMAT(curdate(), '%m');
+select work_group, round(sum(check_num * per_weight) / 1000, 2) as weight
+from t_hdjd_lv_blank_production
+where DATE_FORMAT(production_date, '%m') = DATE_FORMAT(curdate(), '%m')
+group by work_group;
+
+select work_group, round(sum(check_num * per_weight) / 1000, 1) as weight
+from t_hdjd_lv_blank_production
+where production_date = DATE_SUB(CURRENT_DATE(), INTERVAL 4 DAY)
+group by work_group;
+
+select work_group, sum(check_num) as weight
+from t_hdjd_lv_blank_production
+where production_date = DATE_SUB(CURRENT_DATE(), INTERVAL 4 DAY)
+group by work_group;
+
+    """
+    card = dict(
+        {
+            '1组-月生产总吨位': 30.4,
+            '1组-昨日生产总吨位': 3.9,
+            '1组-昨日生产数量': 16,
+            '2组-月生产总吨位': 17.5,
+            '2组-昨日生产总吨位': 1.6,
+            '2组-昨日生产数量': 20,
+            '低压-月生产总吨位': 31.9,
+            '低压-昨日生产总吨位': 3.5,
+            '低压-昨日生产数量': 35,
+            '金属-月生产总吨位': 1.8,
+            '金属-昨日生产总吨位': 0.8,
+            '金属-昨日生产数量': 19,
+            '本月大件废率': '0.65%',
+            '本月小件废率': '0.65%',
+            '本月综合废率': '0.65%',
+            '本月合计报废重量': '727.7（kg）',
+        }
+    )
+
+    return json.dumps(card)
+
+
+@api_screen.route('/screen/lv_detail/queryChart', methods=['POST'])
+def queryChart():
+    client = MySQLClient('hdjd')
+    temp = ['1', '2', '低压', '金属']
+    result = dict({})
+    for item in temp:
+        上周sql = f"""
+        select date_format(weekday,'%Y-%m-%d') weekday, sum(t.check_num) checknum
+from (select ifnull(work_group, '{item}') work_group, t_date.weekday, ifnull(check_num, 0) check_num
+      from (select *
+            from t_hdjd_lv_blank_production
+            where work_group = '{item}'
+              and production_date between DATE_SUB(CURRENT_DATE(), INTERVAL (WEEKDAY(CURRENT_DATE()) + 7)
+                                                   DAY) and DATE_SUB(
+                    CURRENT_DATE(), INTERVAL (WEEKDAY(CURRENT_DATE()) + 1) DAY)) t
+               right join
+           (SELECT DATE_SUB(CURRENT_DATE(), INTERVAL (WEEKDAY(CURRENT_DATE()) + 7) DAY) AS weekday
+            union all
+            SELECT DATE_SUB(CURRENT_DATE(), INTERVAL (WEEKDAY(CURRENT_DATE()) + 6) DAY) AS weekday
+            union all
+            SELECT DATE_SUB(CURRENT_DATE(), INTERVAL (WEEKDAY(CURRENT_DATE()) + 5) DAY) AS weekday
+            union all
+            SELECT DATE_SUB(CURRENT_DATE(), INTERVAL (WEEKDAY(CURRENT_DATE()) + 4) DAY) AS weekday
+            union all
+            SELECT DATE_SUB(CURRENT_DATE(), INTERVAL (WEEKDAY(CURRENT_DATE()) + 3) DAY) AS weekday
+            union all
+            SELECT DATE_SUB(CURRENT_DATE(), INTERVAL (WEEKDAY(CURRENT_DATE()) + 2) DAY) AS weekday
+            union all
+            SELECT DATE_SUB(CURRENT_DATE(), INTERVAL (WEEKDAY(CURRENT_DATE()) + 1) DAY) AS weekday) t_date
+           on t.production_date = t_date.weekday) t
+group by t.weekday
+        """
+
+        本周sql = f"""
+        select date_format(weekday,'%Y-%m-%d') weekday, sum(t.check_num) checknum
+from (select ifnull(work_group, '{item}') work_group, t_date.weekday, ifnull(check_num, 0) check_num
+      from (select *
+            from t_hdjd_lv_blank_production
+            where work_group = '{item}'
+              and production_date between DATE_SUB(CURRENT_DATE(), INTERVAL WEEKDAY(CURRENT_DATE()) DAY) and DATE_ADD(CURRENT_DATE(), INTERVAL 6 - WEEKDAY(CURRENT_DATE()) DAY)) t
+               right join
+           (SELECT DATE_SUB(CURRENT_DATE(), INTERVAL WEEKDAY(CURRENT_DATE()) DAY) AS weekday
+            union all
+            select DATE_ADD(CURRENT_DATE(), INTERVAL 1 - WEEKDAY(CURRENT_DATE()) DAY) AS weekday
+            union all
+            select DATE_ADD(CURRENT_DATE(), INTERVAL 2 - WEEKDAY(CURRENT_DATE()) DAY) AS weekday
+            union all
+            select DATE_ADD(CURRENT_DATE(), INTERVAL 3 - WEEKDAY(CURRENT_DATE()) DAY) AS weekday
+            union all
+            select DATE_ADD(CURRENT_DATE(), INTERVAL 4 - WEEKDAY(CURRENT_DATE()) DAY) AS weekday
+            union all
+            select DATE_ADD(CURRENT_DATE(), INTERVAL 5 - WEEKDAY(CURRENT_DATE()) DAY) AS weekday
+            union all
+            select DATE_ADD(CURRENT_DATE(), INTERVAL 6 - WEEKDAY(CURRENT_DATE()) DAY) AS weekday) t_date
+           on t.production_date = t_date.weekday) t
+group by t.weekday
+        """
+        上周数据 = client.query(上周sql, None)
+        本周数据 = client.query(本周sql, None)
+
+        result[item] = {'data': []}
+        result[item]['data'].append(['weekday', '上周', '本周'])
+        for data1, data2 in zip(上周数据, 本周数据):
+            result[item]['data'].append([data2[0], data1[1], data2[1]])
+    ...
+    return result

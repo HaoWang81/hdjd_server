@@ -17,7 +17,6 @@ def settings_upload():
     if file.filename == '':
         return jsonify({'error': 'No selected file'})
     pd.set_option('display.max_columns', None)
-
     client = MySQLClient('hdjd')
     try:
         if type == '2':  # 工段明细
@@ -138,7 +137,7 @@ def settings_upload():
                 if (index + 1) >= 3 and str(row[0]) != 'nan' and str(row[0]) != '?':
                     data.append((row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9],
                                  row[10], row[11], row[12], row[13], row[14], row[15], row[16], row[17], row[18],
-                                 row[19], row[20], row[21], row[22], row[23], row[24], row[25], row[25]))
+                                 row[19], row[20], row[21], row[22], row[23], row[24], row[25], row[26]))
             sql = ("""
                                insert into t_hdjd_product_monitor_ngc ( 
                                
@@ -174,6 +173,30 @@ def settings_upload():
             client.delete(
                 "delete  from t_hdjd_product_monitor_ngc where DATE_FORMAT(update_time, '%Y-%m-%d')=CURDATE() ", None)
             client.insert_batch(sql, data)
+        elif type == '6':
+            ...
+            lv_detail(file, client)
         return f'成功'
     except Exception as e:
         return f'异常：{e}'
+
+
+# 铝件工段明细上传
+def lv_detail(file, client):
+    df = pd.read_excel(file, sheet_name="毛坯生产数量1")
+    df.fillna(0, inplace=True)
+    data = []
+    for index, row in df.iterrows():
+        production_date = None
+        try:
+            date = pd.to_datetime(row[0], origin='1899-12-30', unit='D', errors='raise',
+                                  infer_datetime_format=False,
+                                  exact=True, cache=False, utc=None, format=None)
+            production_date = str(date)
+        except Exception as e:
+            logging.error(f'非日期格式,{e}')
+            continue
+        data.append((row[1], row[2], row[4], row[5], row[9], row[12], row[13],row[14], production_date))
+    insert_sql = "insert into t_hdjd_lv_blank_production(production_name,check_num,per_weight,production_company,production_unit,custom_group,sale_country,work_group,production_date) values(%s,%s,%s,%s,%s,%s,%s,%s,%s) "
+    client.delete("delete from t_hdjd_lv_blank_production ", None)
+    client.insert_batch(insert_sql, data)

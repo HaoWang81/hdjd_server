@@ -108,8 +108,70 @@ def my_task():
     select changhao,zaoxingzhixin,hexiang,maopichengping,kaixiangqingli,qingli,damo,rechuli,jingxiu,caizhijianyan,maopijianyan,qinglibaozhuang,tuzhuang,tuzhuangjianyan,zhongjian, jiagong,jiagongqingli,jiagongjianyan,count_flag  from t_hdjd_product_monitor where  DATE_FORMAT(update_time, '%Y-%m-%d')=DATE_SUB(CURDATE(), INTERVAL 1 DAY)
     """
 
+    sql_ngcInner = f"""
+        insert into t_hdjd_product_monitor_ngc(
+        changhao,
+       zx_dmjz,
+       zx_jrkx,
+       zx_jrqs,
+       zx_bzzx,
+       zx_ydzx,
+       dm_jrdm,
+       dm_jrrcl,
+       dm_jrjx,
+       dm_jrndtjy,
+       dm_bzdm,
+       dm_yddm,
+       dm_mpzz,
+       yq_jryq,
+       yq_jryqjy,
+       yq_bzyq,
+       yq_ydyq,
+       jg_jrjg,
+       jg_jrjgjy,
+       jg_bzjg,
+       jg_ydjg,
+       jg_jgdw,
+       jg_jgzz,
+       mp_mpzjg,
+       mp_bzmpzjg,
+       mp_ydmpzjg,
+       mp_cpk
+        )
+        select 
+          changhao,
+       zx_dmjz,
+       zx_jrkx,
+       zx_jrqs,
+       zx_bzzx,
+       zx_ydzx,
+       dm_jrdm,
+       dm_jrrcl,
+       dm_jrjx,
+       dm_jrndtjy,
+       dm_bzdm,
+       dm_yddm,
+       dm_mpzz,
+       yq_jryq,
+       yq_jryqjy,
+       yq_bzyq,
+       yq_ydyq,
+       jg_jrjg,
+       jg_jrjgjy,
+       jg_bzjg,
+       jg_ydjg,
+       jg_jgdw,
+       jg_jgzz,
+       mp_mpzjg,
+       mp_bzmpzjg,
+       mp_ydmpzjg,
+       mp_cpk
+          from t_hdjd_product_monitor_ngc where  DATE_FORMAT(update_time, '%Y-%m-%d')=DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+        """
+
     client = MySQLClient("hdjd")
     client.exec(sql_lv, None)
     client.exec(sql_ngc, None)
     client.exec(sql_tie, None)
+    client.exec(sql_ngcInner, None)
     logger.info('数据同步任务结束')
