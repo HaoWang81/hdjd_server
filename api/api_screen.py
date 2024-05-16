@@ -344,48 +344,58 @@ def screen_tie_monitor():
 
 @api_screen.route('/screen/lv_detail/card', methods=['POST'])
 def screen_lv_detail_card():
-    sql = """
-    select DATE_FORMAT(curdate(), '%m');
-select work_group, round(sum(check_num * per_weight) / 1000, 2) as weight
-from t_hdjd_lv_blank_production
-where DATE_FORMAT(production_date, '%m') = DATE_FORMAT(curdate(), '%m')
-group by work_group;
-
-select work_group, round(sum(check_num * per_weight) / 1000, 1) as weight
-from t_hdjd_lv_blank_production
-where production_date = DATE_SUB(CURRENT_DATE(), INTERVAL 4 DAY)
-group by work_group;
-
-select work_group, sum(check_num) as weight
-from t_hdjd_lv_blank_production
-where production_date = DATE_SUB(CURRENT_DATE(), INTERVAL 4 DAY)
-group by work_group;
-
-    """
+    client = MySQLClient('hdjd')
     card = dict(
         {
-            '1组-月生产总吨位': 30.4,
-            '1组-昨日生产总吨位': 3.9,
-            '1组-昨日生产数量': 16,
-            '2组-月生产总吨位': 17.5,
-            '2组-昨日生产总吨位': 1.6,
-            '2组-昨日生产数量': 20,
-            '低压-月生产总吨位': 31.9,
-            '低压-昨日生产总吨位': 3.5,
-            '低压-昨日生产数量': 35,
-            '金属-月生产总吨位': 1.8,
-            '金属-昨日生产总吨位': 0.8,
-            '金属-昨日生产数量': 19,
-            '本月大件废率': '0.65%',
-            '本月小件废率': '0.65%',
-            '本月综合废率': '0.65%',
-            '本月合计报废重量': '727.7（kg）',
+            '1组-月吨位': 30.4,
+            '1组-日吨位': 3.9,
+            '1组-日数量': 16,
+            '2组-月吨位': 17.5,
+            '2组-日吨位': 1.6,
+            '2组-日数量': 20,
+            '低压-月吨位': 31.9,
+            '低压-日吨位': 3.5,
+            '低压-日数量': 35,
+            '金属-月吨位': 1.8,
+            '金属-日吨位': 0.8,
+            '金属-日数量': 19,
+            '月大件废率': '1.06%',
+            '月小件废率': '3.83%',
+            '月综合废率': '1.6%',
+            '月报废重量': '1893.8',
         }
     )
+    temp = ['1', '2', '低压', '金属']
+    for index, item in enumerate(temp):
+        月sql = f"""
+    select work_group, round(sum(check_num * per_weight) / 1000, 2) as weight
+    from t_hdjd_lv_blank_production
+    where DATE_FORMAT(production_date, '%m') = DATE_FORMAT(curdate(), '%m') and work_group='{item}'
+    group by work_group   
+        """
+        日吨位sql = f"""
+         select work_group, round(sum(check_num * per_weight) / 1000, 1) as weight
+    from t_hdjd_lv_blank_production
+    where production_date = DATE_SUB(CURRENT_DATE(), INTERVAL 4 DAY)  and work_group='{item}'
+    group by work_group
+        """
+        日数量sql = f"""
+        select work_group, sum(check_num) as weight
+    from t_hdjd_lv_blank_production
+    where production_date = DATE_SUB(CURRENT_DATE(), INTERVAL 4 DAY) and work_group='{item}'
+    group by work_group
+        """
+        月吨位result = client.query(月sql, None)
+        日吨位result = client.query(日吨位sql, None)
+        日数量result = client.query(日数量sql, None)
+        card[f'{item}{"组" if index <= 1 else ""}-月吨位'] = (0 if len(月吨位result) == 0 else str(月吨位result[0][1]))
+        card[f'{item}{"组" if index <= 1 else ""}-日吨位'] = (0 if len(日吨位result) == 0 else str(日吨位result[0][1]))
+        card[f'{item}{"组" if index <= 1 else ""}-日数量'] = (0 if len(日数量result) == 0 else str(日数量result[0][1]))
 
     return json.dumps(card)
 
 
+weekday = ['一', '二', '三', '四', '五', '六', '日']
 @api_screen.route('/screen/lv_detail/queryChart', methods=['POST'])
 def queryChart():
     client = MySQLClient('hdjd')
@@ -393,7 +403,7 @@ def queryChart():
     result = dict({})
     for item in temp:
         上周sql = f"""
-        select date_format(weekday,'%Y-%m-%d') weekday, sum(t.check_num) checknum
+        select date_format(weekday,'%m-%d') weekday, sum(t.check_num) checknum
 from (select ifnull(work_group, '{item}') work_group, t_date.weekday, ifnull(check_num, 0) check_num
       from (select *
             from t_hdjd_lv_blank_production
@@ -420,7 +430,7 @@ group by t.weekday
         """
 
         本周sql = f"""
-        select date_format(weekday,'%Y-%m-%d') weekday, sum(t.check_num) checknum
+        select date_format(weekday,'%m-%d') weekday, sum(t.check_num) checknum
 from (select ifnull(work_group, '{item}') work_group, t_date.weekday, ifnull(check_num, 0) check_num
       from (select *
             from t_hdjd_lv_blank_production
@@ -448,7 +458,7 @@ group by t.weekday
 
         result[item] = {'data': []}
         result[item]['data'].append(['weekday', '上周', '本周'])
-        for data1, data2 in zip(上周数据, 本周数据):
-            result[item]['data'].append([data2[0], data1[1], data2[1]])
+        for index, (data1, data2) in enumerate(zip(上周数据, 本周数据)):
+            result[item]['data'].append([f'{data2[0]}(周{weekday[index]})', data1[1], data2[1]])
     ...
     return result
