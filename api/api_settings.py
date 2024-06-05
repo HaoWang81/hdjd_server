@@ -1,3 +1,4 @@
+import datetime
 import logging
 
 from flask import Blueprint, request, jsonify
@@ -6,6 +7,25 @@ import pandas as pd
 from utils.db import MySQLClient
 
 api_settings = Blueprint('api_settings', __name__)
+
+
+def lv_agg(file):
+    # 获取当前日期
+    current_date = datetime.datetime.now()
+
+    # 从当前日期中提取月份数字
+    month_number = current_date.month
+
+    print("当前月份数字为:", month_number)
+    df = pd.read_excel(file, sheet_name="汇总")
+    df.fillna(0, inplace=True)
+    for index, row in df.iterrows():
+        if row[45] == (str(month_number) + '月份'):
+            row_str = str(row[46]) + "," + str(row[47]) + "," + str(row[48]) + "," + str(row[49])
+            with open('./row_str.txt', 'w') as new_file:
+                new_file.write(row_str)
+            break
+    pass
 
 
 @api_settings.route('/settings/upload', methods=['POST'])
@@ -176,6 +196,7 @@ def settings_upload():
         elif type == '6':
             ...
             lv_detail(file, client)
+            lv_agg(file)
         return f'成功'
     except Exception as e:
         return f'异常：{e}'
@@ -196,7 +217,7 @@ def lv_detail(file, client):
         except Exception as e:
             logging.error(f'非日期格式,{e}')
             continue
-        data.append((row[1], row[2], row[4], row[5], row[9], row[12], row[13],row[14], production_date))
+        data.append((row[1], row[2], row[4], row[5], row[9], row[12], row[13], row[14], production_date))
     insert_sql = "insert into t_hdjd_lv_blank_production(production_name,check_num,per_weight,production_company,production_unit,custom_group,sale_country,work_group,production_date) values(%s,%s,%s,%s,%s,%s,%s,%s,%s) "
     client.delete("delete from t_hdjd_lv_blank_production ", None)
     client.insert_batch(insert_sql, data)

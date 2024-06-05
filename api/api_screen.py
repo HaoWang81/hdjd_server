@@ -342,29 +342,33 @@ def screen_tie_monitor():
     return json.dumps(serialized_data, ensure_ascii=False)
 
 
+global card
+card = dict(
+    {
+        '1组-月吨位': 30.4,
+        '1组-日吨位': 3.9,
+        '1组-日数量': 16,
+        '2组-月吨位': 17.5,
+        '2组-日吨位': 1.6,
+        '2组-日数量': 20,
+        '低压-月吨位': 31.9,
+        '低压-日吨位': 3.5,
+        '低压-日数量': 35,
+        '金属-月吨位': 1.8,
+        '金属-日吨位': 0.8,
+        '金属-日数量': 19,
+        '月大件废率': '1.49%',
+        '月小件废率': '4.64%',
+        '月综合废率': '2.1%',
+        '月报废重量': '2738.6',
+    }
+)
+
+
 @api_screen.route('/screen/lv_detail/card', methods=['POST'])
 def screen_lv_detail_card():
     client = MySQLClient('hdjd')
-    card = dict(
-        {
-            '1组-月吨位': 30.4,
-            '1组-日吨位': 3.9,
-            '1组-日数量': 16,
-            '2组-月吨位': 17.5,
-            '2组-日吨位': 1.6,
-            '2组-日数量': 20,
-            '低压-月吨位': 31.9,
-            '低压-日吨位': 3.5,
-            '低压-日数量': 35,
-            '金属-月吨位': 1.8,
-            '金属-日吨位': 0.8,
-            '金属-日数量': 19,
-            '月大件废率': '1.06%',
-            '月小件废率': '3.83%',
-            '月综合废率': '1.6%',
-            '月报废重量': '1893.8',
-        }
-    )
+
     temp = ['1', '2', '低压', '金属']
     for index, item in enumerate(temp):
         月sql = f"""
@@ -376,13 +380,13 @@ def screen_lv_detail_card():
         日吨位sql = f"""
          select work_group, round(sum(check_num * per_weight) / 1000, 1) as weight
     from t_hdjd_lv_blank_production
-    where production_date = DATE_SUB(CURRENT_DATE(), INTERVAL 4 DAY)  and work_group='{item}'
+    where production_date = DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)  and work_group='{item}'
     group by work_group
         """
         日数量sql = f"""
         select work_group, sum(check_num) as weight
     from t_hdjd_lv_blank_production
-    where production_date = DATE_SUB(CURRENT_DATE(), INTERVAL 4 DAY) and work_group='{item}'
+    where production_date = DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) and work_group='{item}'
     group by work_group
         """
         月吨位result = client.query(月sql, None)
@@ -392,10 +396,21 @@ def screen_lv_detail_card():
         card[f'{item}{"组" if index <= 1 else ""}-日吨位'] = (0 if len(日吨位result) == 0 else str(日吨位result[0][1]))
         card[f'{item}{"组" if index <= 1 else ""}-日数量'] = (0 if len(日数量result) == 0 else str(日数量result[0][1]))
 
+    content_arr = []
+    with open('./row_str.txt', 'r') as new_file:
+        content = new_file.read()
+        content_arr = content.split(',')
+    card['月大件废率'] = "{:.2f}".format(float(content_arr[0])) + "%"
+    card['月小件废率'] = "{:.2f}".format(float(content_arr[1])) + "%"
+    card['月报废重量'] = "{:.2f}".format(float(content_arr[2]))
+    card['月综合废率'] = "{:.2f}".format(float(content_arr[3])) + "%"
+
     return json.dumps(card)
 
 
 weekday = ['一', '二', '三', '四', '五', '六', '日']
+
+
 @api_screen.route('/screen/lv_detail/queryChart', methods=['POST'])
 def queryChart():
     client = MySQLClient('hdjd')
@@ -457,8 +472,17 @@ group by t.weekday
         本周数据 = client.query(本周sql, None)
 
         result[item] = {'data': []}
-        result[item]['data'].append(['weekday', '上周', '本周'])
+        result[item]['data'].append(['weekday', '上周', '本周', '标准'])
         for index, (data1, data2) in enumerate(zip(上周数据, 本周数据)):
-            result[item]['data'].append([f'{data2[0]}(周{weekday[index]})', data1[1], data2[1]])
+            standard_num = 0
+            if item == '1':
+                standard_num = 18
+            elif item == '2':
+                standard_num = 22
+            elif item == '低压':
+                standard_num = 38
+            elif item == '金属':
+                standard_num = 12
+            result[item]['data'].append([f'{data2[0]}(周{weekday[index]})', data1[1], data2[1], standard_num])
     ...
     return result
