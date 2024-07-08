@@ -51,7 +51,8 @@ def settings_upload():
                                           exact=True, cache=False, utc=None, format=None)
                     production_date = str(date)
                 except Exception as e:
-                    logging.error(f'非日期格式,{e}')
+                    # logging.error(f'非日期格式,{e}')
+                    continue
                 data.append((row[1], row[2], row[3], row[5], row[9], production_date))
             insert_sql = "insert into t_hdjd_blank_production(production_name,check_num,per_weight,production_company,production_unit,production_date) values(%s,%s,%s,%s,%s,%s) "
             client.delete("delete from t_hdjd_blank_production ", None)
@@ -197,6 +198,9 @@ def settings_upload():
             ...
             lv_detail(file, client)
             lv_agg(file)
+        elif type == '7':
+            ...
+            lengtie_detail(file, client)
         return f'成功'
     except Exception as e:
         return f'异常：{e}'
@@ -215,9 +219,21 @@ def lv_detail(file, client):
                                   exact=True, cache=False, utc=None, format=None)
             production_date = str(date)
         except Exception as e:
-            logging.error(f'非日期格式,{e}')
+            # logging.error(f'非日期格式,{e}')
             continue
         data.append((row[1], row[2], row[4], row[5], row[9], row[12], row[13], row[14], production_date))
     insert_sql = "insert into t_hdjd_lv_blank_production(production_name,check_num,per_weight,production_company,production_unit,custom_group,sale_country,work_group,production_date) values(%s,%s,%s,%s,%s,%s,%s,%s,%s) "
     client.delete("delete from t_hdjd_lv_blank_production ", None)
+    client.insert_batch(insert_sql, data)
+
+
+def lengtie_detail(file, client):
+    df = pd.read_excel(file, sheet_name="冷铁监控")
+    df.fillna(0, inplace=True)
+    data = []
+    for index, row in df.iterrows():
+        if index > 0:
+            data.append((row[0], row[1], row[2], row[3], row[4], row[5], row[6]))
+    insert_sql = "insert into t_hdjd_product_monitor_lengtie(production_name,production_use,shortage_today,shortage_after3,current_week_num,current_month_num,production_company) values(%s,%s,%s,%s,%s,%s,%s) "
+    client.delete("delete from t_hdjd_product_monitor_lengtie ", None)
     client.insert_batch(insert_sql, data)

@@ -21,21 +21,22 @@ class MySQLClient:
         cursor.execute(sql, param)
         cursor.close()
         self.conn.close()
-    def query(self, sql,param):
+
+    def query(self, sql, param):
         if not self.conn.is_connected():
             self.conn.reconnect()
         cursor = self.conn.cursor()
-        cursor.execute(sql,param)
+        cursor.execute(sql, param)
         result = cursor.fetchall()
         cursor.close()
         self.conn.close()
         return result
 
-    def delete(self, sql,param):
+    def delete(self, sql, param):
         if not self.conn.is_connected():
             self.conn.reconnect()
         cursor = self.conn.cursor()
-        cursor.execute(sql,param)
+        cursor.execute(sql, param)
         result = cursor.fetchall()
         cursor.close()
         self.conn.close()
@@ -44,7 +45,10 @@ class MySQLClient:
         if not self.conn.is_connected():
             self.conn.reconnect()
         cursor = self.conn.cursor()
-        cursor.executemany(sql, param)
+        try:
+            cursor.executemany(sql, param)
+        except Exception as e:
+            print(e)
         cursor.close()
         self.conn.close()
 
@@ -72,7 +76,7 @@ class MySQLClient:
                     DATE_ADD(STR_TO_DATE(CONCAT('2024', ' ', '1', ' ', '1'), '%X %V %w'), INTERVAL ((WEEK('{date_str}') - 1) * 7 + 6) DAY) AS end_date
             ) AS week_16;
             """
-        rows = self.query(sql,None)
+        rows = self.query(sql, None)
         result = [rows[0][0], rows[0][1]]
         return result
 

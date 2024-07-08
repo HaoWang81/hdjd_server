@@ -23,7 +23,7 @@ from flask_cors import CORS
 
 from utils.init import config
 
-logger.add("./hdjd.log", rotation="500 MB", level="DEBUG")
+logger.add("./hdjd.log", rotation="500 MB", level="INFO")
 
 app = Flask(__name__, static_url_path='/static')
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 10MB
@@ -136,8 +136,8 @@ def start_schedule():
     # 启动调度器
     try:
         scheduler.start()
-        while True:
-            pass
+        # while True:
+        #     pass
     except KeyboardInterrupt:
         scheduler.shutdown()
 

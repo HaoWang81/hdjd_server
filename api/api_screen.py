@@ -476,6 +476,7 @@ group by t.weekday
         for index, (data1, data2) in enumerate(zip(上周数据, 本周数据)):
             standard_num = 0
             if item == '1':
+
                 standard_num = 18
             elif item == '2':
                 standard_num = 22
