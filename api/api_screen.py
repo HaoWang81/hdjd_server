@@ -487,3 +487,29 @@ group by t.weekday
             result[item]['data'].append([f'{data2[0]}(周{weekday[index]})', data1[1], data2[1], standard_num])
     ...
     return result
+
+
+@api_screen.route('/screen/lengtie_monitor/table/', methods=['POST'])
+def lengtie_monitor_table():
+    production_company = request.json.get('production_company')
+    if production_company is None:
+        return json.dumps([])
+    client = MySQLClient('hdjd')
+    table = client.query(
+        f"select * from t_hdjd_product_monitor_lengtie where production_company='{production_company}'", None)
+    serialized_data = [list(item) for item in table]
+    return json.dumps(serialized_data, ensure_ascii=False)
+
+
+@api_screen.route('/screen/lengtie_monitor/card/', methods=['POST'])
+def lengtie_monitor_card():
+    production_company = request.json.get('production_company')
+    if production_company is None:
+        return json.dumps([])
+    client = MySQLClient('hdjd')
+    card = client.query(
+        f"select sum(shortage_today),sum(shortage_after3),sum(current_week_num),sum(current_month_num),count(production_name),count(production_use)  from t_hdjd_product_monitor_lengtie where production_company='{production_company}' group by production_company",
+        None)
+    serialized_data = [str(item) for item in card[0]]
+    result = json.dumps(serialized_data, ensure_ascii=False)
+    return result
