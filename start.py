@@ -124,6 +124,7 @@ def ngc_monitor():
 from api.api_screen import api_screen, ngc_sql_constants
 from api.api_settings import api_settings
 from api.api_home import api_home
+from api.api_task import api_task
 
 
 def start_schedule():
@@ -147,6 +148,7 @@ if __name__ == '__main__':
     app.register_blueprint(api_screen)
     app.register_blueprint(api_settings)
     app.register_blueprint(api_home)
+    app.register_blueprint(api_task)
     schedule_thread = threading.Thread(target=start_schedule)
     schedule_thread.start()
     app.run(host="0.0.0.0", port=config['server']['port'])

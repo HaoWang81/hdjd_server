@@ -241,41 +241,41 @@ def screen_highWeight():
 
 @api_screen.route('/screen/ngc_monitor/', methods=['POST'])
 def screen_ngc_monitor():
-    client = MySQLClient('hdjd')
-    sql = f"""
-    select 
-     changhao,
-       zx_dmjz,
-       zx_jrkx,
-       zx_jrqs,
-       zx_bzzx,
-       zx_ydzx,
-       dm_jrdm,
-       dm_jrrcl,
-       dm_jrjx,
-       dm_jrndtjy,
-       dm_bzdm,
-       dm_yddm,
-       dm_mpzz,
-       yq_jryq,
-       yq_jryqjy,
-       yq_bzyq,
-       yq_ydyq,
-       jg_jrjg,
-       jg_jrjgjy,
-       jg_bzjg,
-       jg_ydjg,
-       jg_jgdw,
-       jg_jgzz,
-       mp_mpzjg,
-       mp_bzmpzjg,
-       mp_ydmpzjg,
-       mp_cpk
-     from t_hdjd_product_monitor_ngc where  DATE_FORMAT(update_time, '%Y-%m-%d') = CURDATE()
-     """
-    result = client.query(sql, None)
-    serialized_data = [list(item) for item in result]
-    return json.dumps(serialized_data, ensure_ascii=False)
+    # client = MySQLClient('hdjd')
+    # sql = f"""
+    # select
+    #  changhao,
+    #    zx_dmjz,
+    #    zx_jrkx,
+    #    zx_jrqs,
+    #    zx_bzzx,
+    #    zx_ydzx,
+    #    dm_jrdm,
+    #    dm_jrrcl,
+    #    dm_jrjx,
+    #    dm_jrndtjy,
+    #    dm_bzdm,
+    #    dm_yddm,
+    #    dm_mpzz,
+    #    yq_jryq,
+    #    yq_jryqjy,
+    #    yq_bzyq,
+    #    yq_ydyq,
+    #    jg_jrjg,
+    #    jg_jrjgjy,
+    #    jg_bzjg,
+    #    jg_ydjg,
+    #    jg_jgdw,
+    #    jg_jgzz,
+    #    mp_mpzjg,
+    #    mp_bzmpzjg,
+    #    mp_ydmpzjg,
+    #    mp_cpk
+    #  from t_hdjd_product_monitor_ngc where  DATE_FORMAT(update_time, '%Y-%m-%d') = CURDATE()
+    #  """
+    # result = client.query(sql, None)
+    # serialized_data = [list(item) for item in result]
+    return json.dumps([], ensure_ascii=False)
 
 
 @api_screen.route('/screen/lv_monitor/', methods=['POST'])
@@ -510,6 +510,9 @@ def lengtie_monitor_card():
     card = client.query(
         f"select sum(shortage_today),sum(shortage_after3),sum(current_week_num),sum(current_month_num),count(production_name),count(production_use)  from t_hdjd_product_monitor_lengtie where production_company='{production_company}' group by production_company",
         None)
-    serialized_data = [str(item) for item in card[0]]
-    result = json.dumps(serialized_data, ensure_ascii=False)
-    return result
+    if len(card) > 0:
+        serialized_data = [str(item) for item in card[0]]
+        result = json.dumps(serialized_data, ensure_ascii=False)
+        return result
+    else:
+        return json.dumps([0, 0, 0, 0, 0, 0], ensure_ascii=False)
