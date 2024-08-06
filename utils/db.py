@@ -27,6 +27,7 @@ class MySQLClient:
         conn = self.conn.get_connection()
         cursor = conn.cursor()
         cursor.execute(sql, param)
+        conn.commit()
         cursor.close()
         conn.close()
 
@@ -44,6 +45,7 @@ class MySQLClient:
         cursor = conn.cursor()
         cursor.execute(sql, param)
         result = cursor.fetchall()
+        conn.commit()
         cursor.close()
         conn.close()
 
@@ -65,7 +67,11 @@ class MySQLClient:
     def insert(self, sql, param):
         conn = self.conn.get_connection()
         cursor = conn.cursor()
-        cursor.execute(sql, param)
+        try:
+            cursor.execute(sql, param)
+            conn.commit()
+        except Exception as e:
+            print(e)
         cursor.close()
         conn.close()
 

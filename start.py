@@ -34,8 +34,12 @@ CORS(app)
 @app.before_request
 def before_request():
     client = MySQLClient('hdjd')
+    url = request.url
+    if 'lengtie' in request.url:
+        production_company = request.json.get('production_company')
+        url += production_company
     client.insert(f'insert into t_hdjd_log(ip,url) values (%s,%s)',
-                  (request.headers.get('X-Forwarded-For'), request.url))
+                  (request.headers.get('X-Forwarded-For'), url))
 
 
 @app.route('/hdjd/upload', methods=['POST'])
