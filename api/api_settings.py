@@ -68,11 +68,15 @@ def settings_upload():
                          row[43], row[44], row[45], row[46], row[47], row[48], row[49], row[50],
                          (1 if row[51] == 1 else 0)))
             sql = (
-                "insert into t_hdjd_product_monitor(changhao,zaoxingzhixin,hexiang,maopichengping,kaixiangqingli,qingli,damo,rechuli,jingxiu,caizhijianyan,maopijianyan,qinglibaozhuang,tuzhuang,tuzhuangjianyan,zhongjian,jiagong,jiagongqingli,jiagongjianyan,count_flag) "
-                "values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)")
-            client.delete("delete  from t_hdjd_product_monitor where DATE_FORMAT(update_time, '%Y-%m-%d')=CURDATE() ",
+                "insert into t_hdjd_product_monitor(changhao,zaoxingzhixin,hexiang,maopichengping,kaixiangqingli,qingli,damo,rechuli,jingxiu,caizhijianyan,maopijianyan,qinglibaozhuang,tuzhuang,tuzhuangjianyan,zhongjian,jiagong,jiagongqingli,jiagongjianyan,count_flag,update_time) "
+                "values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,current_timestamp)")
+            sql1 = (
+                "insert into t_hdjd_product_monitor(changhao,zaoxingzhixin,hexiang,maopichengping,kaixiangqingli,qingli,damo,rechuli,jingxiu,caizhijianyan,maopijianyan,qinglibaozhuang,tuzhuang,tuzhuangjianyan,zhongjian,jiagong,jiagongqingli,jiagongjianyan,count_flag,update_time) "
+                "values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,date_Add(current_timestamp, INTERVAL 1 DAY))")
+            client.delete("delete  from t_hdjd_product_monitor where DATE_FORMAT(update_time, '%Y-%m-%d')=CURDATE() or DATE_FORMAT(update_time, '%Y-%m-%d')=date_Add(current_date, INTERVAL 1 DAY) ",
                           None)
             client.insert_batch(sql, data)
+            client.insert_batch(sql1, data)
         elif type == '3':
             df = pd.read_excel(file, sheet_name="铝件生产监控")
             df.fillna(0, inplace=True)
@@ -106,9 +110,33 @@ def settings_upload():
             qinglizaizhi
             ) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
             """)
+            sql1 = ("""
+                        insert into t_hdjd_product_monitor_lv ( changhao,
+                        jinrizaoxing,
+                        benzhouzaoxing,
+                        benyuezaoxingqianshu,
+                        jinrizhuanxu,
+                        benzhouzhuanxu,
+                        benyuezhuanxuqianshu,
+                        maopichengpin,
+                        damo,
+                        rechuli,
+                        jingxiu,
+                        maopizaizhi,
+                        jinrijiagong,
+                        benzhoujiagong,
+                        yuedujiagong,
+                        jiagongzaizhi,
+                        jinriqingli,
+                        benzhouqingli,
+                        yueduqingli,
+                        qinglizaizhi,update_time
+                        ) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,date_Add(current_timestamp, INTERVAL 1 DAY))
+                        """)
             client.delete(
-                "delete  from t_hdjd_product_monitor_lv where DATE_FORMAT(update_time, '%Y-%m-%d')=CURDATE() ", None)
+                "delete  from t_hdjd_product_monitor_lv where DATE_FORMAT(update_time, '%Y-%m-%d')=CURDATE() or DATE_FORMAT(update_time, '%Y-%m-%d')=date_Add(current_date, INTERVAL 1 DAY) ", None)
             client.insert_batch(sql, data)
+            client.insert_batch(sql1, data)
         elif type == '4':
             df = pd.read_excel(file, sheet_name="铁件生产监控")
             df.fillna(0, inplace=True)
@@ -145,11 +173,42 @@ def settings_upload():
        jinriqingli,
        benzhouqingli,
        yueduqingli,
-       qinglizaizhi) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+       qinglizaizhi
+       ) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                    """)
+            sql1 = ("""
+                               insert into t_hdjd_product_monitor_tie ( changhao,
+                   jinrizhixin,
+                   jinrihexiang,
+                   jinrikaixiang,
+                   benzhouhexiang,
+                   yueduzhixin,
+                   jinrizhuanxu,
+                   benzhouzhuanxu,
+                   yueduzhuanxu,
+                   yueduxiaoshou,
+                   maopichengpin,
+                   damo,
+                   rechuli,
+                   jingxiu,
+                   maopijianyan,
+                   tuzhuang,
+                   maopizaizhi,
+                   jinrijiagong,
+                   benzhoujiagong,
+                   yuedujiagong,
+                   jiagong_yueduxiaoshou,
+                   jiagongzaizhi,
+                   jinriqingli,
+                   benzhouqingli,
+                   yueduqingli,
+                   qinglizaizhi,update_time
+                   ) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,date_Add(current_timestamp, INTERVAL 1 DAY))
+                               """)
             client.delete(
-                "delete  from t_hdjd_product_monitor_tie where DATE_FORMAT(update_time, '%Y-%m-%d')=CURDATE() ", None)
+                "delete  from t_hdjd_product_monitor_tie where DATE_FORMAT(update_time, '%Y-%m-%d')=CURDATE() or DATE_FORMAT(update_time, '%Y-%m-%d')=date_Add(current_date, INTERVAL 1 DAY)", None)
             client.insert_batch(sql, data)
+            client.insert_batch(sql1, data)
         elif type == '5':  # ngc内部监控
             df = pd.read_excel(file, sheet_name="南高齿监控表")
             df.fillna(0, inplace=True)
@@ -191,9 +250,41 @@ def settings_upload():
        mp_cpk
                                ) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                                """)
+            sql1 = ("""
+                                           insert into t_hdjd_product_monitor_ngc ( 
+                                            changhao,
+                   zx_dmjz,
+                   zx_jrkx,
+                   zx_jrqs,
+                   zx_bzzx,
+                   zx_ydzx,
+                   dm_jrdm,
+                   dm_jrrcl,
+                   dm_jrjx,
+                   dm_jrndtjy,
+                   dm_bzdm,
+                   dm_yddm,
+                   dm_mpzz,
+                   yq_jryq,
+                   yq_jryqjy,
+                   yq_bzyq,
+                   yq_ydyq,
+                   jg_jrjg,
+                   jg_jrjgjy,
+                   jg_bzjg,
+                   jg_ydjg,
+                   jg_jgdw,
+                   jg_jgzz,
+                   mp_mpzjg,
+                   mp_bzmpzjg,
+                   mp_ydmpzjg,
+                   mp_cpk,update_time
+                                           ) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,date_Add(current_timestamp, INTERVAL 1 DAY))
+                                           """)
             client.delete(
-                "delete  from t_hdjd_product_monitor_ngc where DATE_FORMAT(update_time, '%Y-%m-%d')=CURDATE() ", None)
+                "delete  from t_hdjd_product_monitor_ngc where DATE_FORMAT(update_time, '%Y-%m-%d')=CURDATE()  or DATE_FORMAT(update_time, '%Y-%m-%d')=date_Add(current_date, INTERVAL 1 DAY)", None)
             client.insert_batch(sql, data)
+            client.insert_batch(sql1, data)
         elif type == '6':
             ...
             lv_detail(file, client)
