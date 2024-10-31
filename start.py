@@ -133,19 +133,11 @@ from api.api_task import api_task
 
 def start_schedule():
     # 创建一个调度器实例
-    logger.info('创建一个调度器实例')
-    scheduler = BlockingScheduler()
+    #logger.info('创建一个调度器实例')
+    #scheduler = BlockingScheduler()
     # 添加任务，每天凌晨12点执行
-    scheduler.add_job(my_task, 'cron', hour=0, minute=41)
-
-    # 启动调度器
-    try:
-        scheduler.start()
-        # while True:
-        #     pass
-    except KeyboardInterrupt:
-        scheduler.shutdown()
-
+    #scheduler.add_job(my_task, 'cron', hour=0, minute=41)
+    ...
 
 if __name__ == '__main__':
     logger.info('...启动服务...')

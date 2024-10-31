@@ -57,7 +57,7 @@ def settings_upload():
             insert_sql = "insert into t_hdjd_blank_production(production_name,check_num,per_weight,production_company,production_unit,production_date) values(%s,%s,%s,%s,%s,%s) "
             client.delete("delete from t_hdjd_blank_production ", None)
             client.insert_batch(insert_sql, data)
-        elif type == '1':  # 生产监控
+        elif type == '1':  # 生产监控C
             df = pd.read_excel(file, sheet_name="3.21日生产监控")
             df.fillna(0, inplace=True)
             data = []
